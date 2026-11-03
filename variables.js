@@ -1,6 +1,5 @@
 // API info
-const BASE_URL = 'https://jht1493.net/COVID-19-Impact/Dashboard/a0/c_data/nyc/c_subs/'
-
+const BASE_URL = 'https://covid19-impact.github.io/COVID-19-parsed-data/c_data/nyc/c_subs/'
 const BRONX = 'Bronx'
 const BROOKLYN = 'Brooklyn'
 const MANHATTAN = 'Manhattan'

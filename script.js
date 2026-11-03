@@ -51,7 +51,9 @@ async function makeMap(url, date_input) {
     const highestCases = raw_or_per100k.value === 'per100k' ? maxLegendPer100K : maxLegendRaw
     let colorScale = d3.scaleLinear().domain([0, highestCases]).range([LIGHT_COLOR, INTENSE_COLOR])
     // create a tooltip
-    let tooltip = d3.select("#map_container")
+    // attached to <body> so pageX/pageY positioning isn't offset by
+    // the position:relative #map_container
+    let tooltip = d3.select("body")
         .append("div")
         .style('position', 'absolute')
         .style("opacity", 0)
@@ -61,6 +63,11 @@ async function makeMap(url, date_input) {
         .style("border-radius", "5px")
         .style("padding", "10px")
         .style("pointer-events", "none")
+    // which side of the pointer the tooltip is on ('right' | 'left'),
+    // and when it was last moved, so side switches can be animated
+    let tooltipSide = null
+    let tooltipLastMove = 0
+    let tooltipSlideTimer = null
     
     // add Callout
     const callout = d3.select("#callout")
@@ -154,6 +161,8 @@ async function makeMap(url, date_input) {
         else if (select_boro.value && path_boro === select_boro.value) {
             highlightZipcodeArea(zipcode_data_hash, zipcode, tooltip, this)
         }
+        // fill and position the tooltip immediately instead of waiting for mousemove
+        mouseMove.call(this, e)
       }
 
     let mouseMove = function(e) {
@@ -171,8 +180,45 @@ async function makeMap(url, date_input) {
                     ${Math.round(total_cases)} <br>
                     Median Income: $${income.toLocaleString()}
                 `)
-                .style("left", e.pageX + 50 + "px")
-                .style("top", e.pageY + "px")
+
+            // Place the tooltip beside the pointer, never under it:
+            // pointer in left half of window -> tooltip to its right,
+            // pointer in right half -> tooltip to its left.
+            // Vertically centred on the pointer, kept inside the window.
+            const tooltipRect = tooltip.node().getBoundingClientRect()
+            const gap = 20
+            const pad = 10
+            const viewLeft = window.scrollX
+            const viewTop = window.scrollY
+            const viewRight = viewLeft + document.documentElement.clientWidth
+            const viewBottom = viewTop + window.innerHeight
+
+            const side = e.clientX < document.documentElement.clientWidth / 2 ? 'right' : 'left'
+            let left = side === 'right'
+                ? e.pageX + gap
+                : e.pageX - gap - tooltipRect.width
+            left = Math.max(viewLeft + pad, Math.min(left, viewRight - tooltipRect.width - pad))
+
+            let top = e.pageY - tooltipRect.height / 2
+            top = Math.max(viewTop + pad, Math.min(top, viewBottom - tooltipRect.height - pad))
+
+            // Slide (instead of jump) when the tooltip switches sides.
+            // Only while the pointer is actively moving: after a pause
+            // (e.g. re-entering the map) the tooltip just appears in place.
+            const now = performance.now()
+            const switching = tooltipSide !== null && side !== tooltipSide
+                && now - tooltipLastMove < 300
+            if (switching) {
+                tooltip.style("transition", "left 0.3s ease-out, top 0.3s ease-out")
+                clearTimeout(tooltipSlideTimer)
+                tooltipSlideTimer = setTimeout(() => tooltip.style("transition", null), 300)
+            }
+            tooltipSide = side
+            tooltipLastMove = now
+
+            tooltip
+                .style("left", `${left}px`)
+                .style("top", `${top}px`)
             // update callout
             d3.selectAll('#callout_zipcode_svg rect').attr('fill', colorScale(total_cases))
             d3.selectAll('.name').text(`${zipcode_name} (${zipcode})`)

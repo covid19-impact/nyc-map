@@ -191,6 +191,7 @@ form > div:not(:last-child) {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.9rem;
     word-wrap: break-word;
+    text-align: center;
     z-index: 100;
 }
 

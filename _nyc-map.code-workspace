@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "files.associations": {
+      "**/*.js": "javascriptreact",
+    },
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 120,
+    "liveServer.settings.port": 5502,
+  },
+}

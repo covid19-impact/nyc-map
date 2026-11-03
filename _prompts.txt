@@ -1,0 +1,11 @@
+
+v1.1
+
+the overlay hover logic works in Safari
+as capture here
+Log-images/2026-11-03-safari.png
+however it fails to show in Chrome
+use the overlay hover logic from 
+../nyc-map-zhiyang/script.js
+
+append chat to Log.md

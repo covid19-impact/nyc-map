@@ -152,8 +152,13 @@ function highlightZipcodeArea(zipcode_data_hash, zipcode, tooltip, target) {
         d3.select(target)
             .style("stroke", STROKE_LIGHT)
             .style("stroke-width", 3)
-        // make sure the hovered path don't get covered by other path
-        d3.select(target).raise()
+        // make sure the hovered path don't get covered by other path.
+        // Only raise when needed: re-appending the node under the cursor makes
+        // Chrome retarget the following mousemove to the parent <g>, so the
+        // path's mousemove handler (which fills the tooltip) never fires.
+        if (target.parentNode && target.parentNode.lastChild !== target) {
+            d3.select(target).raise()
+        }
         keepLabelsOnTop()
     }
 }
